@@ -1,7 +1,9 @@
+import copy
 import requests
+import cv2
 
-BASE_URL = "https://############.cognitiveservices.azure.com/face/v1.0/detect"
-KEY = "############"
+BASE_URL = "https://XXX.cognitiveservices.azure.com/face/v1.0/detect"
+KEY = "XXX"
 
 # リクエストヘッダー
 headers = {
@@ -13,6 +15,8 @@ headers = {
 img_path = "./train_1.png"
 # 画像をデータとして開く
 img_data = open(img_path, "rb")
+# 画像をOpenCVの形式で開く
+img_data_cv2 = cv2.imread(img_path)
 
 # FaceAPI にPOSTリクエスト
 res = requests.post(
@@ -21,5 +25,18 @@ res = requests.post(
     data=img_data
 )
 
-# 画像から検知した顔情報を出力
-print(res.json())
+# レスポンスから顔情報を受け取る
+# 型: リスト (リストの中に辞書がある)
+faces = res.json()
+
+# 顔の分だけループをまわす
+for face in faces:
+    # 顔IDや顔の位置や長さを取得
+    face_id = face["faceId"]
+    x = face["faceRectangle"]["top"]
+    y = face["faceRectangle"]["left"]
+    w = face["faceRectangle"]["width"]
+    h = face["faceRectangle"]["height"]
+
+    # 画像ファイルとして書き込み
+    cv2.imwrite("{}.png".format(face_id), img_data_cv2[x:x+w, y:y+h])
